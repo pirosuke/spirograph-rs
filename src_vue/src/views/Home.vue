@@ -2,7 +2,23 @@
   <v-container>
     <v-row>
       <v-col>
-        <canvas class="spirograph" ref="canvas" width="500" height="500"></canvas>
+        <v-container>
+          <v-row>
+            <v-col>
+              <canvas class="spirograph" ref="canvas" width="500" height="500"></canvas>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col>
+              <v-progress-linear
+                color="light-blue"
+                height="10"
+                :value="progress"
+                striped
+              ></v-progress-linear>
+            </v-col>
+          </v-row>
+        </v-container>
       </v-col>
       <v-col>
         <v-card>
@@ -53,7 +69,7 @@
                     label="回転数"
                     v-model="rotation_times"
                     min="10"
-                    max="50"
+                    max="100"
                     step="10"
                     thumb-label="always"
                   >
@@ -97,12 +113,13 @@
   export default {
     data () {
       return {
-        outer_radius: 50,
-        inner_radius: 30,
-        draw_radius: 60,
+        outer_radius: 130,
+        inner_radius: 34,
+        draw_radius: 47,
         angle_update_coef: 0.1,
         rotation_times: 20,
-        hexColor: "#000000"
+        hexColor: "#000000",
+        angle: 0,
       }
     },
 
@@ -121,7 +138,13 @@
           set(v) {
             this.hexColor = v
           },
-        }
+        },
+        maxAngle() {
+          return 2 * Math.PI * this.rotation_times
+        },
+        progress() {
+          return this.angle / this.maxAngle * 100
+        },
     },
     methods: {
       async draw() {
@@ -132,9 +155,8 @@
         ctx.strokeStyle = this.color
         ctx.beginPath()
 
-        let angle = 0
-        const maxAngle = 2 * Math.PI * this.rotation_times
-        while (angle < maxAngle) {
+        this.angle = 0
+        while (this.angle < this.maxAngle) {
           await this.$store.dispatch('spirograph/calcNewPoint', {
             settings: {
               outer_radius: this.outer_radius,
@@ -143,13 +165,13 @@
               area_width: canvas.width,
               area_height: canvas.height,
             },
-            angle,
+            angle: this.angle,
           })
           const point = this.$store.state.spirograph.point
           ctx.lineTo(point.x, point.y)
           ctx.stroke()
-          angle += this.angle_update_coef
-          //await this.sleep(50)
+          this.angle += this.angle_update_coef
+          await this.sleep()
         }
       },
 
@@ -159,10 +181,8 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height)
       },
 
-      sleep(ms) {
-        return new Promise((resolve) => {
-          setTimeout(resolve, ms)
-        })
+      sleep() {
+        return new Promise(requestAnimationFrame)
       },
     }
   }

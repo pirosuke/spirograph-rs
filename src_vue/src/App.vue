@@ -6,7 +6,7 @@
       dark
     >
       <v-toolbar-title class="headline">
-        <span>スピログラフ</span>
+        <span>Webスピログラフ</span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
       <v-btn
